@@ -11,7 +11,7 @@ autenticacion = TinyDB('autenticacion.json')
 selector = Query()
 
 salir = False
-pafuera = False
+esc = False
 
 while not salir:
     # Registro/Inicio de sesion
@@ -49,7 +49,7 @@ while not salir:
 
         else:
             
-            while not pafuera:
+            while not esc:
                 print("hola")
             
                 print("""
