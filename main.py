@@ -1,121 +1,62 @@
+from fastapi import FastAPI
 from tinydb import TinyDB, Query
 
- 
+app = FastAPI()
 
-
-# Data base
-
-database = TinyDB('db.json')
-autenticacion = TinyDB('autenticacion.json')
-
+user_accounts = TinyDB('user_accounts.json')
 selector = Query()
 
-salir = False
-esc = False
+# Authentication endpoints
+@app.post("/auth/register")
+def auth_register(email, password):
+    encontrado = user_accounts.search(selector.email == str(email))
+    if not encontrado:
+         user_accounts.insert({"email":email, "contrasena":password})
+         return {"msg":"Usuario creado"}  
+    else:
+       return  {"msg":"Error ya existe"}
 
-while not salir:
-    # Registro/Inicio de sesion
-    
-    print(""" 
-        # 1) Registrarte
-        # 2) iniciar sesion
-        """)     
-    initial_action = input('Elige 1 o 2 para lo que vayas a realizar: ')
+@app.post("/auth/login")
+def auth_login(email, password):
+    encontrado = user_accounts.search(selector.email == str(email))
+    if not user_accounts:
+        return{'msg':'el usuario no existe'}
 
-    if initial_action == "1":
+    elif encontrado[0]['contrasena'] != password:
+        return {'msg':'contraseña incorrecta'}
 
-        email = input('Teclea tu correo electronico: ')
-        password = input('Teclea tu contraseña: ')
-        encontrado = autenticacion.search(selector.email == str(email))
-        if not encontrado:
-            autenticacion.insert({"email":email, "contrasena":password})  
-        else:
-           print('Error, el usuario ya existe')
-
-
-    # Verificar identidad
-    elif initial_action == "2":
-        for item in autenticacion:
-            print(item)
-        email = input('teclea tu correo electronico: ')
-        password = input('teclea tu contraseña: ')
-
-        encontrado = autenticacion.search(selector.email == str(email))
-        if not encontrado:
-            print('el usuario no existe')
-
-        elif encontrado[0]['contrasena'] != password:
-            print('contraseña incorrecta')
-
-        else:
-            
-            while not esc:
-                print("hola")
-            
-                print("""
-                    # 1) Nueva Contraseña   
-                    # 2) Mostrar Contraseña
-                    # 3) Actualizar Contraseña
-                    # 4) Borrar una contraseña
-                    # 5) Escribe "Salir" para salir del programa
-                    """)
-                menu = input('Selecciona el numero de la operacion que vayas a realizar: ')
-            
-            
-            # Introducir nuevas contraseñas
-                if menu == "1":
-
-                    idenfiticador = input('Introduce la URL:  ')
-                    valor = input('Introduce la contraseña:  ')
-
-                    if idenfiticador not in database:
-                        database.insert({"url":idenfiticador, "password":valor})
+# Authenticated endpoints
+@app.post("/users/{user_id}/accounts")
+def create_account(user_id, token, url, username, password):
+    if password not in user_accounts:
+        user_accounts.insert({"url":url, "password":password})
+        return {'msg':'Contraseña creada y url creada'}
                         
-                    else:
-                        print('Esa contraseña ya existe')    
-                    
-                # Mostrar contraseñas
-                elif menu == "2":
-                    for item in database:
-                        print(f" - {item['url']}")
-                    idenfiticador = input('¿Que contraseña quieres mostrar? ')
+    else:
+        return{'msg':'Esa contraseña ya existe'}
 
-                    result = database.search(selector.url == str(idenfiticador))
+@app.get("/users/{user_id}/accounts/{account_id}")
+def get_account(user_id, account_id, token):
+    result = user_accounts.search(selector.url == str(user_id))
 
-                    if len(result) < 0:
-                        print('Esa contraseña no existe')
-                    else:
-                        result = database.search(selector.url == str(idenfiticador))
-                        print(f"la contraseña es *** {result[0]['password']} ***")
-                        
-                        
-                # Actualizar contraseña
-                elif menu == "3":
+    if len(result) < 0:
+        return{'msg':'Esa contraseña no existe'}
+    else:
+        result = user_accounts.search(selector.url == str(user_id))
+        a = result[0]['password']
+        print(f"la contraseña es *** {result[0]['password']} ***")
+        return {'msg':f'la contraseña es {a}'}
 
-                    for item in database:
-                        print(f" - {item['url']}")
-                    
-                    password = input('Cual es la contraseña que quieres actualizar: ')
-                    update = input('Escribe la nueva contraseña: ')
-                    database.update({'password':update}, selector.url == str(password))
-                
+@app.put("/users/{user_id}/accounts/{account_id}")
+def update_account(user_id, account_id, token, url, username, password):
+    user_accounts.update({'password':password}, selector.url == str(url))
+    return {'msg': 'Contraseña actualizada'}
 
-                elif menu == "4":
-                    for item in database:
-                        print(f" - {item['url']}")
-
-                    delete = input('Que contraseña quieres borrar?')
-                    database.remove(selector.url == str(delete))
-
-                elif menu in ["Salir","salir"]:
-                    salir = True
-                    pafuera = True
-                else:
-                    print('Operacion desconocida')
-
-                
-        
-print('Fin')  
-
+@app.delete("/users/{user_id}/accounts/{account_id}")
+def delete_account(user_id, account_id, token):
+    user_accounts.remove(selector.url == str(user_id))
+    return {'msg':'Contraseña eliminada'}
 
     
+    
+
