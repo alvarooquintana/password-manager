@@ -9,13 +9,17 @@ selector = Query()
 
 # Authentication endpoints
 @app.post("/auth/register")
-def auth_register(email, password):
+def auth_register(email, password,):
+    
+
     if not email or not password:
         return{"msg":"No has enviado los datos correctos"}
     found = user_accounts.search(selector.email == str(email))
     if not found:
+        account = []
+        
         user_id = str(uuid.uuid4())
-        user_accounts.insert({"user_id":user_id[:5],"email":email, "password":password})
+        user_accounts.insert({"user_id":user_id[:5],"email":email, "password":password, "accounts": account})
         return {"msg":"New user"}  
     else:
        return  {"msg":"Error, the user already exists"}
@@ -40,29 +44,40 @@ def auth_login(email, password):
 # Authenticated endpoints
 @app.post("/users/{user_id}/accounts")
 def create_account(user_id, token, url, username, password):
-    if user_id not in user_accounts:
-        user_accounts.insert({"user_id":user_id,"url":url,"token":token,"username":username,"password":password})
-        return {'msg':'Contraseña creada'}
+    user = user_accounts.search(selector.token == str(token))
+    
+    if user:
+        user[0]["accounts"].append({
+            "account_id":"123sd8",
+            "url": url,
+            "username": username,
+            "password": password
+        })
+        return user_accounts.update({"accounts": user[0]["accounts"]}, selector.token == str(token))
+    else: 
+        return {"msg":"Error"}
                         
-    else:
-        return{'msg':'Esa contraseña ya existe'}
+    
 
 @app.get("/users/{user_id}/accounts/{account_id}")
 def get_account(user_id, account_id, token):
-    result = user_accounts.search(selector.url == str(user_id))
-
-    if len(result) < 0:
-        return{'msg':'Esa contraseña no existe'}
+    result = user_accounts.search(selector.token == str(token))
+    ok = result[0]["accounts"][0]["password"]
+    if result:
+        return {"msg": f"la contraseña es {ok}"}
     else:
-        result = user_accounts.search(selector.url == str(user_id))
-        a = result[0]['password']
-        print(f"la contraseña es *** {result[0]['password']} ***")
-        return {'msg':f'la contraseña es {a}'}
+        return{"msg":"No hay contraseña"}
+
+    
 
 @app.put("/users/{user_id}/accounts/{account_id}")
 def update_account(user_id, account_id, token, url, username, password):
-    user_accounts.update({'password':password}, selector.url == str(url))
-    return {'msg': 'Contraseña actualizada'}
+    user = user_accounts.search(selector.token == str(token))
+    if user:
+        user_accounts.update({'password':password}, selector.user_id == str(user_id))
+        return {'msg': 'Contraseña actualizada'}
+    else:
+        return{'msg':'No disponible'}
 
 @app.delete("/users/{user_id}/accounts/{account_id}")
 def delete_account(user_id, account_id, token):
