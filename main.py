@@ -93,8 +93,7 @@ def update_account(user_id, account_id, token, url, username, password):
         else: 
             return {"msg":"Error"}
                    
-        # Aqui te tienes que meter dentro de cada uno de los valores de la lista de accounts y te pones a buscar el que coincide con el account_id. Usa un bucle for. 
-        # Después de encontrar el account y editarlo, actualizas la lista de accounts dentro de user y haces el update como está puesto abajo
+        
 
 
 
