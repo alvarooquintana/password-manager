@@ -86,7 +86,7 @@ def update_account(user_id, account_id, token, url, username, password):
                     user_accounts.update({"accounts": user[0]["accounts"]}, selector.token == str(token))
         
                 
-                    return {"msg":"Bieeeen!!!"}
+                    return {"msg":"Usuario Actualizado!"}
 
             return {"msg": "Usuario no encontrado!!!!"}
                         
