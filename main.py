@@ -45,10 +45,10 @@ def auth_login(email, password):
 @app.post("/users/{user_id}/accounts")
 def create_account(user_id, token, url, username, password):
     user = user_accounts.search(selector.token == str(token))
-    
+    account_id_random = str(uuid.uuid4())
     if user:
         user[0]["accounts"].append({
-            "account_id":"123sd8",
+            "account_id": account_id_random,
             "url": url,
             "username": username,
             "password": password
@@ -72,17 +72,45 @@ def get_account(user_id, account_id, token):
 
 @app.put("/users/{user_id}/accounts/{account_id}")
 def update_account(user_id, account_id, token, url, username, password):
-    user = user_accounts.search(selector.token == str(token))
-    if user:
-        user_accounts.update({'password':password}, selector.user_id == str(user_id))
-        return {'msg': 'Contraseña actualizada'}
-    else:
-        return{'msg':'No disponible'}
+        user = user_accounts.search(selector.token == str(token))
+
+        if user:
+            account = user[0]["accounts"]
+            for index, account in enumerate(account):
+
+                if item['account_id'] == str(account_id):
+                    
+                    user[0]["accounts"][index]['url'] = str(url)
+                    user[0]["accounts"][index]['username'] = str(username)
+                    user[0]["accounts"][index]['password'] = str(password)
+                    user_accounts.update({"accounts": user[0]["accounts"]}, selector.token == str(token))
+        
+                
+                    return {"msg":"Bieeeen!!!"}
+
+            return {"msg": "Usuario no encontrado!!!!"}
+                        
+        else: 
+            return {"msg":"Error"}
+                   
+        # Aqui te tienes que meter dentro de cada uno de los valores de la lista de accounts y te pones a buscar el que coincide con el account_id. Usa un bucle for. 
+        # Después de encontrar el account y editarlo, actualizas la lista de accounts dentro de user y haces el update como está puesto abajo
+
+
+
 
 @app.delete("/users/{user_id}/accounts/{account_id}")
 def delete_account(user_id, account_id, token):
-    user_accounts.remove(selector.url == str(user_id))
-    return {'msg':'Contraseña eliminada'}
+    user = user_accounts.search(selector.token == str(token))
+    result = user_accounts.search(selector.token == str(token))
+    
+    if user:
+
+        user_accounts.remove(selector.result[0]["accounts"][0]["account_id"] == str(account_id))
+    
+        return {'msg':'Contraseña eliminada'}
+    else:
+        return {"msg":"Error"}
 
     
     
