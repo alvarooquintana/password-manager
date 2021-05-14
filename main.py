@@ -101,13 +101,16 @@ def update_account(user_id, account_id, token, url, username, password):
 @app.delete("/users/{user_id}/accounts/{account_id}")
 def delete_account(user_id, account_id, token):
     user = user_accounts.search(selector.token == str(token))
-    result = user_accounts.search(selector.token == str(token))
+                
     
     if user:
-
-        user_accounts.remove(selector.result[0]["accounts"][0]["account_id"] == str(account_id))
+            account = user[0]["accounts"]
+            for index, account in enumerate(account):
+                user[0]['accounts'][index].clear()
+                
+                user_accounts.update({"accounts": user[0]["accounts"]} ,  selector.token == str(token))
     
-        return {'msg':'Contraseña eliminada'}
+            return {'msg':'Contraseña eliminada'}
     else:
         return {"msg":"Error"}
 
